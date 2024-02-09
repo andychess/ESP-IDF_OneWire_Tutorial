@@ -1,7 +1,14 @@
 #include <iostream>
 #include "acp_ds18b20.h" 
 
+
+std::vector<ACP_OneWire::RomNumber> deviceIds { };
+
 extern "C" void app_main(void)
 {
-  ACP_DS18B20::DS18B20 ds81b20(GPIO_NUM_23);
+  ACP_OneWire::OneWire onewire(GPIO_NUM_23, 0x28);
+
+  deviceIds = onewire.ScanDevices();
+
+  onewire.PrintRomNumbers();
 }

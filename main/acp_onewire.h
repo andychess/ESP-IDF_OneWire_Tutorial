@@ -10,14 +10,14 @@
 
 namespace ACP_OneWire
 {
+  struct RomNumber
+  {
+    uint8_t romNumber[8] { }; // [0] = Device Family, [1] - [6] = 48 bit Rom Id, [7] = CRC.
+  };
+
   class OneWire
   {
-    private:
-      struct m_rom_number_t 
-      {
-        uint8_t romNumber[8] { }; // [0] = Device Family, [1] - [6] = 48 bit Rom Id, [7] = CRC.
-      };
-
+    public:
       constexpr static uint8_t M_CMD_SEARCH_NORMAL { 0xF0 };
       constexpr static uint8_t M_CMD_MATCH_ROM { 0x55 };
       constexpr static uint8_t M_CMD_SKIP_ROM { 0xCC };
@@ -110,7 +110,8 @@ namespace ACP_OneWire
       rmt_symbol_word_t m_rx_buffer[8 * M_RX_MAX_BYTES] { }; // 1 symbol = 1 bit.
                                                              
       uint8_t m_device_family;
-      std::vector<m_rom_number_t> m_devices_found { }; 
+      std::vector<RomNumber> m_devices_found { }; 
+      size_t m_total_devices { };
       uint8_t m_last_discrepancy { 0 };
       bool m_last_device { false };
 
@@ -128,6 +129,9 @@ namespace ACP_OneWire
       esp_err_t TransmitBytes(const uint8_t *txData, uint8_t txDataSize);
       esp_err_t ReadBit(uint8_t& rxBit);
       esp_err_t ReadBytes(uint8_t *rxBuffer, size_t RxBufferSize);
+      std::vector<RomNumber> ScanDevices(void);
+      size_t GetTotalDevices(void);
+      void PrintRomNumbers(void);
 
     private:
 
@@ -144,7 +148,6 @@ namespace ACP_OneWire
       void decodeRmtData(rmt_symbol_word_t* rmtSymbols, size_t numSymbols, uint8_t* rxBuffer, size_t rxBufferSize);
       uint8_t getCrc8Fast(uint8_t initCrc, uint8_t *input, size_t inputSize);
       uint8_t getCrc8(uint8_t initCrc, uint8_t *input, size_t inputSize);
-      esp_err_t scanDevices(void);
-      esp_err_t getNextDevice(m_rom_number_t& currentRomNumber);
+      esp_err_t getNextDevice(RomNumber& currentRomNumber);
   };
   }

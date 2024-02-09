@@ -152,9 +152,6 @@ namespace ACP_OneWire
     // Initialise Line to High. This line sends the first eot message.  Without it the line does not go high.
     result |= TransmitSymbol(m_copy_encoder_handle, m_release_symbol);
 
-    // Look for Devices.
-    result |= scanDevices();
-
     if (ESP_OK == result) ESP_LOGI(TAG, "OneWire initialised.");
   }
 
@@ -266,14 +263,14 @@ namespace ACP_OneWire
     return result;
   }
 
-  esp_err_t OneWire::scanDevices(void)
+  std::vector<RomNumber> OneWire::ScanDevices(void)
   {
     esp_err_t result { ESP_OK };
     uint8_t deviceFamilyIndex { 0 };
 
     while (!m_last_device)
     {
-      m_rom_number_t nextRom { };
+      RomNumber nextRom { };
       
       // Look for next device.
       result |= getNextDevice(nextRom);
@@ -281,7 +278,7 @@ namespace ACP_OneWire
       if (ESP_OK != result)
       {
         ESP_LOGE(TAG, "Device search failed!");
-        return result;
+        break;
       }
 
       // Is the family correct.
@@ -293,19 +290,31 @@ namespace ACP_OneWire
 
       // Store device.
       m_devices_found.push_back(nextRom);
-
-      //DEBUG
-      uint64_t temp = nextRom.romNumber[6];
-      temp = (temp << 8) + nextRom.romNumber[5];
-      temp = (temp << 8) + nextRom.romNumber[4];
-      temp = (temp << 8) + nextRom.romNumber[3];
-      temp = (temp << 8) + nextRom.romNumber[2];
-      temp = (temp << 8) + nextRom.romNumber[1];
-
-      ESP_LOGI(TAG, "Device Found: %llX", temp);
     }
 
-    return result;
+    return m_devices_found;
+  }
+
+
+  size_t OneWire::GetTotalDevices(void)
+  {
+    ScanDevices();
+
+    m_total_devices = m_devices_found.size();
+
+    return m_total_devices;
+  }
+
+  void OneWire::PrintRomNumbers(void)
+  {
+    for (auto & rom : m_devices_found)
+    {
+      for (size_t i { 6 }; i > 0; i--)
+      {
+        printf("%02X", rom.romNumber[i]);
+      }
+      printf("\n");
+    }
   }
 
   bool OneWire::isDevicePresent(rmt_symbol_word_t *symbols, size_t totalSymbols)
@@ -396,7 +405,7 @@ namespace ACP_OneWire
     return crc;
   }
 
-  esp_err_t OneWire::getNextDevice(m_rom_number_t& currentRomNumber)
+  esp_err_t OneWire::getNextDevice(RomNumber& currentRomNumber)
   {
     esp_err_t result { ESP_OK };
     

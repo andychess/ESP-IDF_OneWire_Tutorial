@@ -4,7 +4,7 @@
 
 namespace ACP_DS18B20
 {
-  static const char* TAG { "DS18B20_Bus" };
+  static const char* TAG { "DS18B20" };
 
   DS18B20::DS18B20(ACP_OneWire::RomNumber deviceId, ACP_OneWire::OneWire& onewire) : 
     m_onewire_bus { onewire }

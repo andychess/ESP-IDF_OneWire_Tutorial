@@ -106,9 +106,6 @@ namespace ACP_OneWire
       BaseType_t taskWoken = pdFALSE;
       QueueHandle_t queue = (QueueHandle_t)queueName;
 
-      //DEBUG
-      gpio_set_level(GPIO_NUM_3, 0);
-
       xQueueSendFromISR(queue, edata, &taskWoken);
 
       return taskWoken == pdTRUE;;

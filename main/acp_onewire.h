@@ -39,7 +39,7 @@ namespace ACP_OneWire
       constexpr static uint16_t M_RESET_PRESENCE_WAIT_DURATION_MIN { 15 }; // Minimum duration for master to wait for device to show its presence.
       constexpr static uint16_t M_RESET_PRESENCE_DURATION_MIN { 60 }; // Minimum duration for master to recognise device as present. 
                                                                       
-      constexpr static uint8_t m_crc8_table[] 
+      constexpr static uint8_t M_CRC8_TABLE[] 
       {
         0, 94, 188, 226, 97, 63, 221, 131, 194, 156, 126, 32, 163, 253, 31, 65,
         157, 195, 33, 127, 252, 162, 64, 30, 95,  1, 227, 189, 62, 96, 130, 220,
@@ -59,7 +59,7 @@ namespace ACP_OneWire
         116, 42, 200, 150, 21, 75, 169, 247, 182, 232, 10, 84, 215, 137, 107, 53
       };
 
-      constexpr static rmt_symbol_word_t m_reset_pulse_symbol 
+      constexpr static rmt_symbol_word_t M_RESET_PULSE_SYMBOL 
       {
         .duration0 = M_RESET_PULSE_DURATION,
         .level0 = 0,
@@ -67,7 +67,7 @@ namespace ACP_OneWire
         .level1 = 1
       };
 
-      constexpr static rmt_symbol_word_t m_bit0_symbol
+      constexpr static rmt_symbol_word_t M_BIT0_SYMBOL
       {
         .duration0 = M_SLOT_START_DURATION + M_SLOT_BIT_DURATION,
         .level0 = 0,
@@ -75,7 +75,7 @@ namespace ACP_OneWire
         .level1 = 1
       };
 
-      constexpr static rmt_symbol_word_t m_bit1_symbol
+      constexpr static rmt_symbol_word_t M_BIT1_SYMBOL
       {
         .duration0 = M_SLOT_START_DURATION,
         .level0 = 0,
@@ -83,7 +83,7 @@ namespace ACP_OneWire
         .level1 = 1
       };
 
-      constexpr static rmt_symbol_word_t m_release_symbol
+      constexpr static rmt_symbol_word_t M_RELEASE_SYMBOL
       {
         .duration0 = 1,
         .level0 = 1,
@@ -132,6 +132,8 @@ namespace ACP_OneWire
       std::vector<RomNumber> ScanDevices(void);
       size_t GetTotalDevices(void);
       void PrintRomNumbers(void);
+      uint8_t GetCrc8Fast(uint8_t initCrc, uint8_t *input, size_t inputSize);
+      uint8_t GetCrc8(uint8_t initCrc, uint8_t *input, size_t inputSize);
 
     private:
 
@@ -146,8 +148,6 @@ namespace ACP_OneWire
       esp_err_t enableTxChannel(void); 
       esp_err_t setupCallback(void); 
       void decodeRmtData(rmt_symbol_word_t* rmtSymbols, size_t numSymbols, uint8_t* rxBuffer, size_t rxBufferSize);
-      uint8_t getCrc8Fast(uint8_t initCrc, uint8_t *input, size_t inputSize);
-      uint8_t getCrc8(uint8_t initCrc, uint8_t *input, size_t inputSize);
       esp_err_t getNextDevice(RomNumber& currentRomNumber);
-  };
+    };
   }

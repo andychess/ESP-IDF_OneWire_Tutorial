@@ -150,7 +150,7 @@ namespace ACP_OneWire
     result |= setupCallback(); 
 
     // Initialise Line to High. This line sends the first eot message.  Without it the line does not go high.
-    result |= TransmitSymbol(m_copy_encoder_handle, m_release_symbol);
+    result |= TransmitSymbol(m_copy_encoder_handle, M_RELEASE_SYMBOL);
 
     if (ESP_OK == result) ESP_LOGI(TAG, "OneWire initialised.");
   }
@@ -159,8 +159,8 @@ namespace ACP_OneWire
   {
     esp_err_t result { ESP_OK };
     
-    m_bytes_encoder_config.bit0 = m_bit0_symbol;
-    m_bytes_encoder_config.bit1 = m_bit1_symbol;
+    m_bytes_encoder_config.bit0 = M_BIT0_SYMBOL;
+    m_bytes_encoder_config.bit1 = M_BIT1_SYMBOL;
     m_bytes_encoder_config.flags.msb_first = 0;
 
     result = rmt_new_bytes_encoder(&m_bytes_encoder_config, &m_bytes_encoder_handle);
@@ -368,19 +368,19 @@ namespace ACP_OneWire
     }
   }
 
-  uint8_t OneWire::getCrc8Fast(uint8_t initCrc, uint8_t *input, size_t inputSize)
+  uint8_t OneWire::GetCrc8Fast(uint8_t initCrc, uint8_t *input, size_t inputSize)
   {
       uint8_t crc = initCrc;
 
       for (size_t i { 0 }; i < inputSize; i++) 
       {
-          crc = m_crc8_table[crc ^ input[i]];
+          crc = M_CRC8_TABLE[crc ^ input[i]];
       }
 
       return crc;
   }
 
-  uint8_t OneWire::getCrc8(uint8_t initCrc, uint8_t *input, size_t inputSize)
+  uint8_t OneWire::GetCrc8(uint8_t initCrc, uint8_t *input, size_t inputSize)
   {
     uint8_t crc = initCrc;
     uint8_t byte { };
@@ -501,7 +501,7 @@ namespace ACP_OneWire
     const uint8_t initCrc { 0 };
     const size_t crcByte { 7 }; 
 
-    if (getCrc8(initCrc, currentRomNumber.romNumber, crcByte) != currentRomNumber.romNumber[crcByte])
+    if (GetCrc8(initCrc, currentRomNumber.romNumber, crcByte) != currentRomNumber.romNumber[crcByte])
     {
       ESP_LOGE(TAG, "CRC check failed!");
     }
@@ -517,7 +517,7 @@ namespace ACP_OneWire
 
     result |= rmt_receive(m_rx_channel, m_rx_buffer, sizeof(rmt_symbol_word_t) * 2, &m_rx_config);
 
-    result |= TransmitSymbol(m_copy_encoder_handle, m_reset_pulse_symbol);
+    result |= TransmitSymbol(m_copy_encoder_handle, M_RESET_PULSE_SYMBOL);
     
     xQueueReceive(m_receive_queue, &m_rx_event_data, pdMS_TO_TICKS(1000));
 
@@ -536,7 +536,7 @@ namespace ACP_OneWire
   esp_err_t OneWire::TransmitBit(const uint8_t txBit)
   {
     esp_err_t result { ESP_OK };
-    rmt_symbol_word_t symbolToTransmit = txBit ? m_bit1_symbol : m_bit0_symbol;
+    rmt_symbol_word_t symbolToTransmit = txBit ? M_BIT1_SYMBOL : M_BIT0_SYMBOL;
     int timeout { 50 }; // 50 ms.
 
     xSemaphoreTake(m_mutex, portMAX_DELAY);
@@ -588,7 +588,7 @@ namespace ACP_OneWire
 
     result |= rmt_receive(m_rx_channel, m_rx_buffer, sizeof(rmt_symbol_word_t), &m_rx_config);
 
-    result |= rmt_transmit(m_tx_channel, m_copy_encoder_handle, &m_bit1_symbol, sizeof(rmt_symbol_word_t), &m_tx_config);
+    result |= rmt_transmit(m_tx_channel, m_copy_encoder_handle, &M_BIT1_SYMBOL, sizeof(rmt_symbol_word_t), &m_tx_config);
 
     xQueueReceive(m_receive_queue, &m_rx_event_data, pdMS_TO_TICKS(1000));
 

@@ -20,84 +20,40 @@ namespace ACP_DS18B20
       constexpr static uint8_t M_CMD_WRITE_SCRATCHPAD { 0x4E };
       constexpr static uint8_t M_CMD_READ_SCRATCHPAD { 0xBE };
       constexpr static uint8_t M_ONEWIRE_FAMILY { 0x28 }; 
+      constexpr static uint8_t M_RESOLUTION[4] { 0x1F, 0x3F, 0x5F, 0x7F };
+      constexpr static uint32_t M_CONVERSION_DELAY_MS[4] { 100, 200, 400, 800 };
+      constexpr static uint8_t M_LSB_MASK[4] = { 0x07, 0x03, 0x01, 0x00 };
+      constexpr static float M_TEMP_READ_ERROR { 9999 }; 
 
+      constexpr static size_t M_INDEX_TEMP_LSB { 0 }; 
+      constexpr static size_t M_INDEX_TEMP_MSB { 1 };
+      constexpr static size_t M_INDEX_TH_USER_ONE { 2 };
+      constexpr static size_t M_INDEX_TL_USER_TWO { 3 };
+      constexpr static size_t M_INDEX_CONFIGURATION { 4 };
+      constexpr static size_t M_INDEX_RESERVED_ONE { 5 };
+      constexpr static size_t M_INDEX_RESERVED_TWO { 6 };
+      constexpr static size_t M_INDEX_RESERVED_THREE { 7 };
+      constexpr static size_t M_INDEX_CRC_VALUE { 8 };     
+
+      uint8_t m_scratchpad[9] { };
+
+      resolution_t m_resolution { resolution_t::RESOLUTION_12_BIT };
+
+      ACP_OneWire::OneWire& m_onewire_bus;
+
+      ACP_OneWire::RomNumber m_device_id;
 
     public:
-      DS18B20();
+      DS18B20(ACP_OneWire::RomNumber deviceId, ACP_OneWire::OneWire& onewire);
 
+      esp_err_t SetResolution(resolution_t resolution);
+      float GetTemperature(void);
 
     private:
+      esp_err_t sendCommand(uint8_t cmd);
+      esp_err_t triggerTemperatureConversion(void);
+      esp_err_t ds18b20_get_temperature(float *temperature);
   
   };
 }
 
-// static esp_err_t ds18b20_send_command(ds18b20_device_handle_t ds18b20, uint8_t cmd)
-// {
-//     // send command
-//     uint8_t tx_buffer[10] = {0};
-//     tx_buffer[0] = ONEWIRE_CMD_MATCH_ROM;
-//     memcpy(&tx_buffer[1], &ds18b20->addr, sizeof(ds18b20->addr));
-//     tx_buffer[sizeof(ds18b20->addr) + 1] = cmd;
-//
-//     return onewire_bus_write_bytes(ds18b20->bus, tx_buffer, sizeof(tx_buffer));
-// }
-//
-// esp_err_t ds18b20_set_resolution(ds18b20_device_handle_t ds18b20, ds18b20_resolution_t resolution)
-// {
-//     ESP_RETURN_ON_FALSE(ds18b20, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
-//     // reset bus and check if the ds18b20 is present
-//     ESP_RETURN_ON_ERROR(onewire_bus_reset(ds18b20->bus), TAG, "reset bus error");
-//
-//     // send command: DS18B20_CMD_WRITE_SCRATCHPAD
-//     ESP_RETURN_ON_ERROR(ds18b20_send_command(ds18b20, DS18B20_CMD_WRITE_SCRATCHPAD), TAG, "send DS18B20_CMD_WRITE_SCRATCHPAD failed");
-//
-//     // write new resolution to scratchpad
-//     const uint8_t resolution_data[] = {0x1F, 0x3F, 0x5F, 0x7F};
-//     uint8_t tx_buffer[3] = {0};
-//     tx_buffer[0] = ds18b20->th_user1;
-//     tx_buffer[1] = ds18b20->tl_user2;
-//     tx_buffer[2] = resolution_data[resolution];
-//     ESP_RETURN_ON_ERROR(onewire_bus_write_bytes(ds18b20->bus, tx_buffer, sizeof(tx_buffer)), TAG, "send new resolution failed");
-//
-//     ds18b20->resolution = resolution;
-//     return ESP_OK;
-// }
-//
-// esp_err_t ds18b20_trigger_temperature_conversion(ds18b20_device_handle_t ds18b20)
-// {
-//     ESP_RETURN_ON_FALSE(ds18b20, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
-//     // reset bus and check if the ds18b20 is present
-//     ESP_RETURN_ON_ERROR(onewire_bus_reset(ds18b20->bus), TAG, "reset bus error");
-//
-//     // send command: DS18B20_CMD_CONVERT_TEMP
-//     ESP_RETURN_ON_ERROR(ds18b20_send_command(ds18b20, DS18B20_CMD_CONVERT_TEMP), TAG, "send DS18B20_CMD_CONVERT_TEMP failed");
-//
-//     // delay proper time for temperature conversion
-//     const uint32_t delays_ms[] = {100, 200, 400, 800};
-//     vTaskDelay(pdMS_TO_TICKS(delays_ms[ds18b20->resolution]));
-//
-//     return ESP_OK;
-// }
-//
-// esp_err_t ds18b20_get_temperature(ds18b20_device_handle_t ds18b20, float *ret_temperature)
-// {
-//     ESP_RETURN_ON_FALSE(ds18b20 && ret_temperature, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
-//     // reset bus and check if the ds18b20 is present
-//     ESP_RETURN_ON_ERROR(onewire_bus_reset(ds18b20->bus), TAG, "reset bus error");
-//
-//     // send command: DS18B20_CMD_READ_SCRATCHPAD
-//     ESP_RETURN_ON_ERROR(ds18b20_send_command(ds18b20, DS18B20_CMD_READ_SCRATCHPAD), TAG, "send DS18B20_CMD_READ_SCRATCHPAD failed");
-//
-//     // read scratchpad data
-//     ds18b20_scratchpad_t scratchpad;
-//     ESP_RETURN_ON_ERROR(onewire_bus_read_bytes(ds18b20->bus, (uint8_t *)&scratchpad, sizeof(scratchpad)),
-//                         TAG, "error while reading scratchpad data");
-//     // check crc
-//     ESP_RETURN_ON_FALSE(onewire_crc8(0, (uint8_t *)&scratchpad, 8) == scratchpad.crc_value, ESP_ERR_INVALID_CRC, TAG, "scratchpad crc error");
-//
-//     const uint8_t lsb_mask[4] = {0x07, 0x03, 0x01, 0x00}; // mask bits not used in low resolution
-//     uint8_t lsb_masked = scratchpad.temp_lsb & (~lsb_mask[scratchpad.configuration >> 5]);
-//     *ret_temperature = (((int16_t)scratchpad.temp_msb << 8) | lsb_masked)  / 16.0f;
-//
-//     return ESP_OK;
-// }

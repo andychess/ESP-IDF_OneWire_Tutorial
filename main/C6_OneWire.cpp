@@ -23,7 +23,7 @@ extern "C" void app_main(void)
   //Loop through found devices, displaying temperatures. 
   for (auto sensor : sensors)
   {
-    sensor.SetResolution(ACP_DS18B20::resolution_t::RESOLUTION_9_BIT);
+    sensor.SetResolution(ACP_DS18B20::Resolution::RESOLUTION_9_BIT);
 
     std::cout << sensor.GetTemperature() << std::endl;
   }

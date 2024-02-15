@@ -5,7 +5,7 @@
 
 namespace ACP_DS18B20
 {
-  enum class resolution_t
+  enum class Resolution
   {
     RESOLUTION_9_BIT,
     RESOLUTION_10_BIT,
@@ -37,7 +37,7 @@ namespace ACP_DS18B20
 
       uint8_t m_scratchpad[9] { };
 
-      resolution_t m_resolution { resolution_t::RESOLUTION_12_BIT };
+      Resolution m_resolution { Resolution::RESOLUTION_12_BIT };
 
       ACP_OneWire::OneWire& m_onewire_bus;
 
@@ -46,13 +46,11 @@ namespace ACP_DS18B20
     public:
       DS18B20(ACP_OneWire::RomNumber deviceId, ACP_OneWire::OneWire& onewire);
 
-      esp_err_t SetResolution(resolution_t resolution);
+      esp_err_t SetResolution(Resolution resolution);
       float GetTemperature(void);
 
     private:
       esp_err_t sendCommand(uint8_t cmd);
-      esp_err_t triggerTemperatureConversion(void);
-      esp_err_t ds18b20_get_temperature(float *temperature);
   
   };
 }

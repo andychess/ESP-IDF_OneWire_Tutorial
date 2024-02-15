@@ -40,7 +40,7 @@ namespace ACP_DS18B20
     return result;
   }
 
-  esp_err_t DS18B20::SetResolution(resolution_t res)
+  esp_err_t DS18B20::SetResolution(Resolution res)
   {
     esp_err_t result { ESP_OK };
     uint8_t txBuffer[3] { 0 };
